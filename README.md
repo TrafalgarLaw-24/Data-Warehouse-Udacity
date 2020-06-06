@@ -1,10 +1,11 @@
 ## Summary
+### Sparkify Redshift
 This project aims to test the understanding of Data warehousing concepts.
 The task includes facilitating the Sparkify app in setting up a data warehouse
 that would have the data of songs which users are listening to.
 This would help Sparkify analyze the user activities to understand user base.
 
-This project uses `Amazon s3` for file storage and `Amazon Redshift`
+This project uses `Amazon s3 bucket` for file storage and `Amazon Redshift`
  for database storage and data warehouse purpose.
 
 ## Source Data
@@ -30,7 +31,7 @@ Following are the fact and dimension tables made for this project:
    * songplays
         * columns: songplay_id, start_time, user_id, level, song_id, artist_id, session_id, location, user_agent
 
-## To run the project:
+## To execute the project:
    * Update the `dwh.cfg` file with your AWS credentials and IAM role that will be used to access the cluster.
    * Run the `create_tables.py`. This will create the database and all the necessary tables.
    * Run `etl.py`. This will start the pipeline which will read the data from the files and populate the tables.
