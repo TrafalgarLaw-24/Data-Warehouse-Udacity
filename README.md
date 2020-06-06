@@ -37,4 +37,4 @@ Following are the fact and dimension tables made for this project:
    * Run `etl.py`. This will start the pipeline which will read the data from the files and populate the tables.
 
 ## About:
-This project is done as part of Udacity Data Engineering program
+This project is done as part of Udacity Data Engineer Nano degree program
