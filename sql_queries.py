@@ -7,13 +7,13 @@ config.read('dwh.cfg')
 
 # DROP TABLES
 
-staging_events_table_drop = "DROP TABLE IF EXISTS public.events_stage;"
-staging_songs_table_drop = "DROP TABLE IF EXISTS public.songs_stage;"
-songplay_table_drop = "DROP TABLE IF EXISTS public.songplays;"
-user_table_drop = "DROP TABLE IF EXISTS public.users;"
-song_table_drop = "DROP TABLE IF EXISTS public.songs;"
-artist_table_drop = "DROP TABLE IF EXISTS public.artists;"
-time_table_drop = "DROP TABLE IF EXISTS public.time;"
+staging_events_table_drop = "DROP TABLE IF EXISTS staging_events"
+staging_songs_table_drop = "DROP TABLE IF EXISTS staging_songs"
+songplay_table_drop = "DROP TABLE IF EXISTS songplays"
+user_table_drop = "DROP TABLE IF EXISTS users"
+song_table_drop = "DROP TABLE IF EXISTS songs"
+artist_table_drop = "DROP TABLE IF EXISTS artists"
+time_table_drop = "DROP TABLE IF EXISTS time"
 
 # CREATE TABLES
 
@@ -25,7 +25,7 @@ staging_events_table_create = ("""CREATE TABLE staging_events(
     user_gender  VARCHAR(1),
     item_in_session	INTEGER,
     user_last_name VARCHAR(255),
-    song_length	DOUBLE PRECISION, 
+    song_length	DOUBLE PRECISION,
     user_level VARCHAR(50),
     location VARCHAR(255),
     method VARCHAR(25),
@@ -112,7 +112,7 @@ time_table_create = ("""CREATE TABLE time(
 
 staging_events_copy = ("""copy staging_events from '{}'
  credentials 'aws_iam_role={}'
- region 'us-west-2' 
+ region 'us-west-2'
  COMPUPDATE OFF STATUPDATE OFF
  JSON '{}'""").format(config.get('S3','LOG_DATA'),
                         config.get('IAM_ROLE', 'ARN'),
@@ -122,18 +122,18 @@ staging_events_copy = ("""copy staging_events from '{}'
 
 staging_songs_copy = ("""copy staging_songs from '{}'
     credentials 'aws_iam_role={}'
-    region 'us-west-2' 
+    region 'us-west-2'
     COMPUPDATE OFF STATUPDATE OFF
     JSON 'auto'
-    """).format(config.get('S3','SONG_DATA'), 
+    """).format(config.get('S3','SONG_DATA'),
                 config.get('IAM_ROLE', 'ARN'))
 
 # FINAL TABLES
 
-songplay_table_insert = ("""INSERT INTO songplays (start_time, user_id, level, song_id, artist_id, session_id, location, user_agent) 
-    SELECT DISTINCT 
-        TIMESTAMP 'epoch' + ts/1000 *INTERVAL '1 second' as start_time, 
-        e.user_id, 
+songplay_table_insert = ("""INSERT INTO songplays (start_time, user_id, level, song_id, artist_id, session_id, location, user_agent)
+    SELECT DISTINCT
+        TIMESTAMP 'epoch' + ts/1000 *INTERVAL '1 second' as start_time,
+        e.user_id,
         e.user_level,
         s.song_id,
         s.artist_id,
@@ -146,22 +146,22 @@ songplay_table_insert = ("""INSERT INTO songplays (start_time, user_id, level, s
     AND user_id NOT IN (SELECT DISTINCT s.user_id FROM songplays s WHERE s.user_id = user_id
                        AND s.start_time = start_time AND s.session_id = session_id )
 """)
- 
-user_table_insert = ("""INSERT INTO users (user_id, first_name, last_name, gender, level)  
-    SELECT DISTINCT 
+
+user_table_insert = ("""INSERT INTO users (user_id, first_name, last_name, gender, level)
+    SELECT DISTINCT
         user_id,
         user_first_name,
         user_last_name,
-        user_gender, 
+        user_gender,
         user_level
     FROM staging_events
     WHERE page = 'NextSong'
     AND user_id NOT IN (SELECT DISTINCT user_id FROM users)
 """)
 
-song_table_insert = ("""INSERT INTO songs (song_id, title, artist_id, year, duration) 
-    SELECT DISTINCT 
-        song_id, 
+song_table_insert = ("""INSERT INTO songs (song_id, title, artist_id, year, duration)
+    SELECT DISTINCT
+        song_id,
         title,
         artist_id,
         year,
@@ -170,8 +170,8 @@ song_table_insert = ("""INSERT INTO songs (song_id, title, artist_id, year, dura
     WHERE song_id NOT IN (SELECT DISTINCT song_id FROM songs)
 """)
 
-artist_table_insert = ("""INSERT INTO artists (artist_id, name, location, latitude, longitude) 
-    SELECT DISTINCT 
+artist_table_insert = ("""INSERT INTO artists (artist_id, name, location, latitude, longitude)
+    SELECT DISTINCT
         artist_id,
         artist_name,
         artist_location,
@@ -182,17 +182,17 @@ artist_table_insert = ("""INSERT INTO artists (artist_id, name, location, latitu
 """)
 
 time_table_insert = ("""INSERT INTO time (start_time, hour, day, week, month, year, weekday)
-    SELECT 
-        start_time, 
+    SELECT
+        start_time,
         EXTRACT(hr from start_time) AS hour,
         EXTRACT(d from start_time) AS day,
         EXTRACT(w from start_time) AS week,
         EXTRACT(mon from start_time) AS month,
-        EXTRACT(yr from start_time) AS year, 
-        EXTRACT(weekday from start_time) AS weekday 
+        EXTRACT(yr from start_time) AS year,
+        EXTRACT(weekday from start_time) AS weekday
     FROM (
-        SELECT DISTINCT  TIMESTAMP 'epoch' + ts/1000 *INTERVAL '1 second' as start_time 
-        FROM staging_events s     
+        SELECT DISTINCT  TIMESTAMP 'epoch' + ts/1000 *INTERVAL '1 second' as start_time
+        FROM staging_events s
     )
     WHERE start_time NOT IN (SELECT DISTINCT start_time FROM time)
 """)
